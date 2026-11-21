@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rami Albatal</title>
+<meta property="og:image" content="https://ramialbatal.github.io/images/rami.jpg">
 <meta name="description" content="Rami Albatal: data scientist, Head of AI at Beamery, and researcher in lifelogging and AI.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,6 +48,22 @@
     font: 17px/1.65 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   .wrap { max-width: 720px; margin: 0 auto; padding: 72px 16px 56px; }
+  header { display: flex; align-items: center; gap: 32px; }
+  .intro { min-width: 0; }
+  .photo {
+    flex: none;
+    display: block;
+    width: 160px;
+    height: 160px;
+    border-radius: 20px;
+    object-fit: cover;
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  @media (max-width: 560px) {
+    header { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .photo { width: 120px; height: 120px; }
+  }
   header h1 {
     font-family: "Source Serif 4", Georgia, serif;
     font-weight: 600;
@@ -55,7 +72,7 @@
     margin: 0 0 12px;
     letter-spacing: -0.01em;
   }
-  .role { color: var(--muted); font-size: 1.1rem; margin: 0 0 24px; }
+  .role { color: var(--muted); font-size: 1.1rem; margin: 0 0 18px; }
   .links { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; margin: 0; list-style: none; }
   .links a {
     display: inline-block;
@@ -113,6 +130,8 @@
 <body>
 <div class="wrap">
   <header>
+    <img class="photo" src="images/rami.jpg" alt="Rami Albatal wearing Google Glass" width="160" height="160">
+    <div class="intro">
     <h1>Rami Albatal</h1>
     <p class="role">Data scientist, Head of AI at Beamery, and researcher in lifelogging and AI.</p>
     <ul class="links">
@@ -120,6 +139,7 @@
       <li><a href="https://scholar.google.com/citations?user=tuG6AlQAAAAJ">Google Scholar</a></li>
       <li><a href="https://github.com/ramialbatal">GitHub</a></li>
     </ul>
+    </div>
   </header>
 
   <section>
