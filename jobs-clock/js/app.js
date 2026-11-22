@@ -2,19 +2,13 @@
   "use strict";
 
   const CFG = window.JOBS_CONFIG;
+  const C = window.ClockCore;
+  const { YEAR, fmt, signed, setText } = C;
   const $ = (id) => document.getElementById(id);
-  const YEAR = new Date().getUTCFullYear();
-  const yearStart = (y) => Date.UTC(y, 0, 1);
-  const MS_PER_YEAR = (y) => yearStart(y + 1) - yearStart(y);
-  const SEC_PER_YEAR = MS_PER_YEAR(YEAR) / 1000;
 
-  const fmt0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
-  const fmt1 = new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const fmt2 = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const signed = (x, f = fmt0) => (x > 0 ? "+" : x < 0 ? "-" : "") + f.format(Math.abs(x));
-
-  // ---- Fetching ------------------------------------------------------------
-  function url(indicator, codes) {
+  // ---- Data (ILOSTAT, ILO modelled estimates) --------------------------------
+  const codes = [CFG.world, ...CFG.countries.map((c) => c.code)];
+  function url(indicator) {
     const q = new URLSearchParams({
       id: indicator, sex: "SEX_T", classif1: "AGE_YTHADULT_YGE15",
       timefrom: String(CFG.historyFrom), format: ".csv"
@@ -22,141 +16,132 @@
     // ILOSTAT takes several areas joined by "+"; added by hand so it isn't encoded as a space.
     return `${CFG.apiBase}?${q}&ref_area=${codes.join("+")}`;
   }
-
-  function parseCsv(text) {
-    const rows = [];
-    for (const line of text.replace(/^﻿/, "").trim().split(/\r?\n/)) {
-      const cells = [];
-      let cur = "", q = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (q) {
-          if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
-          else if (ch === '"') q = false;
-          else cur += ch;
-        } else if (ch === '"') q = true;
-        else if (ch === ",") { cells.push(cur); cur = ""; }
-        else cur += ch;
-      }
-      cells.push(cur);
-      rows.push(cells);
-    }
-    const [head, ...body] = rows;
-    return body.map((r) => Object.fromEntries(head.map((h, i) => [h, r[i]])));
-  }
-
   // -> { CODE: { year: value } }
   function index(rows, scale) {
     const out = {};
     for (const r of rows) {
       const v = parseFloat(r.obs_value);
-      if (!r.ref_area || !isFinite(v)) continue;
-      (out[r.ref_area] ||= {})[+r.time] = v * scale;
+      if (r.ref_area && isFinite(v)) (out[r.ref_area] ||= {})[+r.time] = v * scale;
     }
     return out;
   }
-
-  async function fetchCsv(u) {
-    const res = await fetch(u);
-    if (!res.ok) throw new Error(`HTTP ${res.status} from ILOSTAT`);
-    return parseCsv(await res.text());
-  }
-
-  let dataPromise = null;
-  function loadData() {
-    if (dataPromise) return dataPromise;
-    const codes = [CFG.world, ...CFG.countries.map((c) => c.code)];
+  const loadData = C.once(async () => {
     const I = CFG.indicators;
-    dataPromise = Promise.all([
-      fetchCsv(url(I.employed, codes)), fetchCsv(url(I.unemployed, codes)), fetchCsv(url(I.rate, codes))
-    ]).then(([e, u, r]) => {
-      const data = { employed: index(e, 1000), unemployed: index(u, 1000), rate: index(r, 1) };
-      if (!data.employed[CFG.world] || !data.unemployed[CFG.world]) throw new Error("World figures missing from response");
-      return { data, fetchedAt: new Date() };
-    }).catch((err) => { dataPromise = null; throw err; });
-    return dataPromise;
-  }
+    const [e, u, r] = await Promise.all([I.employed, I.unemployed, I.rate].map((id) => C.fetchCsv(url(id))));
+    const data = { employed: index(e, 1000), unemployed: index(u, 1000), rate: index(r, 1) };
+    if (!data.employed[CFG.world] || !data.unemployed[CFG.world]) throw new Error("World figures missing from response");
+    return { data, fetchedAt: new Date() };
+  });
 
   // ---- Model ---------------------------------------------------------------
   // The ILO gives annual averages. Each is placed at the middle of its year and the
   // level at any moment is a straight line between neighbouring mid-years
-  // (extended along the nearest segment at the ends). Net new jobs so far this year
-  // = employment now - employment on 1 January.
-  const tYears = (ms) => {
-    const y = new Date(ms).getUTCFullYear();
-    return y + (ms - yearStart(y)) / MS_PER_YEAR(y);
-  };
+  // (extended along the nearest segment at the ends).
   function levelAt(series, t) {
-    const ys = Object.keys(series).map(Number).sort((a, b) => a - b);
-    const pts = ys.map((y) => [y + 0.5, series[y]]);
-    if (pts.length === 1) return { v: pts[0][1], slope: 0 };
+    const pts = Object.keys(series).map(Number).sort((a, b) => a - b).map((y) => [y + 0.5, series[y]]);
+    if (pts.length === 1) return pts[0][1];
     let i = pts.findIndex(([x]) => x > t);
     if (i <= 0) i = i === 0 ? 1 : pts.length - 1;
     const [x0, v0] = pts[i - 1], [x1, v1] = pts[i];
-    const slope = (v1 - v0) / (x1 - x0);   // per year
-    return { v: v0 + slope * (t - x0), slope };
+    return v0 + ((v1 - v0) / (x1 - x0)) * (t - x0);
   }
 
   function buildEntry(emp, une, rate) {
-    const t0 = YEAR;                       // 1 January, in fractional years
-    const e0 = levelAt(emp, t0).v, u0 = levelAt(une, t0).v;
-    const yearNet = levelAt(emp, YEAR + 1).v - e0;   // net new jobs over the whole calendar year
+    const e0 = levelAt(emp, YEAR), u0 = levelAt(une, YEAR);          // 1 January
+    const yearNet = levelAt(emp, YEAR + 1) - e0;                      // net new jobs, whole calendar year
+    const yearUne = levelAt(une, YEAR + 1) - u0;                      // change in unemployed, whole year
+    const newWorkers = yearNet + yearUne;                             // growth of the labour force
     const years = Object.keys(emp).map(Number).filter((y) => y <= YEAR).sort((a, b) => a - b);
+    const rateOf = (y) => rate[y] ?? (une[y] / (une[y] + emp[y])) * 100;
     return {
-      emp, une, rate, e0, u0, yearNet, years,
+      emp, une, rate, e0, u0, yearNet, yearUne, newWorkers, years,
       empY: emp[YEAR], uneY: une[YEAR], uneDelta: une[YEAR] - une[YEAR - 1],
-      rateY: rate[YEAR] ?? (une[YEAR] / (une[YEAR] + emp[YEAR])) * 100,
-      ratePrev: rate[YEAR - 1] ?? (une[YEAR - 1] / (une[YEAR - 1] + emp[YEAR - 1])) * 100,
-      now(t) {
-        const E = levelAt(emp, t), U = levelAt(une, t);
-        return { jobs: E.v - e0, jobsPerSec: E.slope / SEC_PER_YEAR, unemployed: U.v, uneSince: U.v - u0, unePerSec: U.slope / SEC_PER_YEAR };
-      }
+      rateY: rateOf(YEAR), ratePrev: rateOf(YEAR - 1),
+      // share of this year's new workers covered by net new jobs (null if the workforce is shrinking)
+      keepUp: newWorkers > 0 ? yearNet / newWorkers : null,
+      jobsAt: (t) => levelAt(emp, t) - e0,
+      unemployedAt: (t) => levelAt(une, t),
+      workersAt: (t) => levelAt(emp, t) + levelAt(une, t) - e0 - u0
     };
+  }
+
+  // Keeping-up verdict: are net new jobs at least matching the growth of the workforce?
+  function keepUpVerdict(e) {
+    if (e.keepUp == null) return e.yearUne <= 0
+      ? { cls: "ok", text: "Unemployment falling" } : { cls: "bad", text: "Unemployment rising" };
+    if (e.keepUp >= 1) return { cls: "ok", text: "Keeping up" };
+    if (e.keepUp >= 0.9) return { cls: "near", text: "Close" };
+    return { cls: "bad", text: "Falling behind" };
   }
 
   // ---- Rendering -----------------------------------------------------------
   function people(n) {
     const a = Math.abs(n), s = n < 0 ? "-" : "";
-    if (a >= 1e9) return s + fmt2.format(a / 1e9) + " billion";
-    if (a >= 1e6) return s + fmt1.format(a / 1e6) + " million";
-    if (a >= 1e3) return s + fmt0.format(a / 1e3) + " thousand";
-    return s + fmt0.format(a);
+    if (a >= 1e9) return s + fmt[2].format(a / 1e9) + " billion";
+    if (a >= 1e6) return s + fmt[1].format(a / 1e6) + " million";
+    if (a >= 1e3) return s + fmt[0].format(a / 1e3) + " thousand";
+    return s + fmt[0].format(a);
   }
-  const digits = (s) => s.replace(/[0-9]/g, (d) => `<span class="d">${d}</span>`);
 
-  function sparkline(e) {
+  function sparkFor(e) {
     const ys = Object.keys(e.rate).map(Number).filter((y) => y <= YEAR).sort((a, b) => a - b);
-    if (ys.length < 2) return "";
     const vals = ys.map((y) => e.rate[y]);
-    const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1;
-    const W = 120, H = 28;
-    const xy = vals.map((v, i) => [(i / (vals.length - 1)) * W, H - 3 - ((v - min) / span) * (H - 6)]);
-    const pts = xy.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-    const [lx, ly] = xy[xy.length - 1];
     const ch = vals[vals.length - 1] - vals[0];
-    return `<figure class="spark-wrap" title="Unemployment rate, ${ys[0]} to ${ys[ys.length - 1]}. Show yearly values">
-      <svg class="spark" viewBox="-2 0 ${W + 4} ${H}" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${pts}"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.2"/>
-      </svg>
-      <figcaption>rate ${ys[0]}-${String(ys[ys.length - 1]).slice(2)} <b class="${ch > 0 ? "down" : ch < 0 ? "up" : ""}">${signed(ch, fmt1)} pts</b></figcaption>
-      <span class="sr-only">Unemployment rate ${ys[0]} to ${ys[ys.length - 1]}</span>
-    </figure>`;
+    return C.sparkline(ys, vals, {
+      caption: `rate ${ys[0]}-${String(ys[ys.length - 1]).slice(2)}`, change: ch,
+      changeText: signed(ch, fmt[1]) + " pts", good: "down",
+      title: `Unemployment rate, ${ys[0]} to ${ys[ys.length - 1]}. Show yearly values`
+    });
   }
 
   function historyTable(e) {
     const rows = e.years.slice().reverse().map((y) => {
       const d = e.emp[y - 1] != null ? e.emp[y] - e.emp[y - 1] : null;
       return `<tr><th>${y}${y >= YEAR - 1 ? "*" : ""}</th><td>${people(e.emp[y])}</td><td class="${d > 0 ? "good" : d < 0 ? "bad" : ""}">${
-        d == null ? "" : signed(d / 1e6, fmt1) + " M"}</td><td>${e.rate[y] != null ? fmt1.format(e.rate[y]) + "%" : ""}</td></tr>`;
+        d == null ? "" : signed(d / 1e6, fmt[1]) + " M"}</td><td>${e.rate[y] != null ? fmt[1].format(e.rate[y]) + "%" : ""}</td></tr>`;
     }).join("");
     return `<div class="history" hidden><table><caption>Employed · yearly change · unemployment rate (* ILO estimate or projection)</caption>${rows}</table></div>`;
   }
 
+  function cardGoal(e) {
+    const v = keepUpVerdict(e);
+    const label = e.keepUp == null
+      ? `Workforce shrinking · unemployed ${signed(e.yearUne / 1e3)} k this year`
+      : `${fmt[0].format(Math.min(e.keepUp, 9.99) * 100)} jobs per 100 new workers`;
+    return `<div class="card-goal">
+        ${e.keepUp == null ? "" : `<div class="goal-bar" title="Net new jobs this year as a share of new workers (the marker is 100: enough jobs for all of them)">
+          <i style="width:${Math.min(e.keepUp, 1) * 100}%"></i><span style="left:100%"></span></div>`}
+        <p><span>${label}</span><span class="verdict ${v.cls}">${v.text}</span></p>
+      </div>`;
+  }
+
+  function renderGoal(world) {
+    const v = keepUpVerdict(world);
+    $("goal-verdict").textContent = v.text;
+    $("goal-verdict").className = "verdict " + v.cls;
+    $("g-newworkers-year").textContent = people(world.newWorkers);
+    $("g-jobs-year").textContent = people(world.yearNet);
+    $("g-per100").textContent = fmt[0].format(world.keepUp * 100);
+    // Direction toward the UN 2030 goal: compare the ILO estimate for next year with this year.
+    const next = world.une[YEAR + 1], base = world.une[CFG.historyFrom];
+    const improving = next != null && next < world.uneY;
+    $("sdg-verdict").textContent = next == null ? "No projection" : improving ? "Improving" : "Getting worse";
+    $("sdg-verdict").className = "verdict " + (next == null ? "" : improving ? "ok" : "bad");
+    $("sdg-base").textContent = people(base);
+    $("sdg-now").textContent = people(world.uneY);
+    $("sdg-change").textContent = signed(((world.uneY / base) - 1) * 100, fmt[0]) + "%";
+    $("sdg-next").textContent = next != null ? people(next) : "n/a";
+    return (t) => {
+      const jobs = world.jobsAt(t), workers = world.workersAt(t);
+      setText($("g-jobs"), fmt[0].format(jobs));
+      setText($("g-workers"), fmt[0].format(workers));
+      $("g-bar").style.width = Math.min(jobs / workers, 1) * 100 + "%";
+    };
+  }
+
   const T0 = Date.now();
-  let loopId = 0;
 
   function render(data) {
-    const myLoop = ++loopId;
     const W = CFG.world;
     const world = buildEntry(data.employed[W], data.unemployed[W], data.rate[W] || {});
 
@@ -168,29 +153,28 @@
 
     // Rest of world = world minus listed (top-level) countries, year by year.
     const top = entries.filter((e) => !e.partOf);
-    const restSeries = (key) => {
+    const rest = (key, field) => {
       const s = {};
-      for (const y of Object.keys(data[key][W])) {
-        s[y] = data[key][W][y] - top.reduce((a, e) => a + (e[key === "employed" ? "emp" : "une"][y] || 0), 0);
-      }
+      for (const y of Object.keys(data[key][W])) s[y] = data[key][W][y] - top.reduce((a, e) => a + (e[field][y] || 0), 0);
       return s;
     };
-    const rEmp = restSeries("employed"), rUne = restSeries("unemployed"), rRate = {};
+    const rEmp = rest("employed", "emp"), rUne = rest("unemployed", "une"), rRate = {};
     for (const y of Object.keys(rEmp)) rRate[y] = (rUne[y] / (rUne[y] + rEmp[y])) * 100;
     entries.push({ code: "ROW", flag: "🌐", name: "Rest of world", rest: true, ...buildEntry(rEmp, rUne, rRate) });
 
     // Header fill-ins
-    document.querySelectorAll("[data-first]").forEach((el) => (el.textContent = CFG.historyFrom));
-    document.querySelectorAll("[data-prev]").forEach((el) => (el.textContent = YEAR - 1));
-    document.querySelectorAll("[data-next]").forEach((el) => (el.textContent = YEAR + 1));
+    C.fill("first", CFG.historyFrom);
+    C.fill("prev", YEAR - 1);
+    C.fill("next", YEAR + 1);
     $("w-yearnet").textContent = people(world.yearNet);
     $("w-emp").textContent = people(world.empY);
     $("w-emp-prev").textContent = people(world.emp[YEAR - 1]);
-    $("w-rate").textContent = fmt1.format(world.rateY) + "%";
-    $("w-rate-prev").textContent = fmt1.format(world.ratePrev) + "%";
-    $("w-years").textContent = fmt1.format(world.uneY / world.yearNet);
+    $("w-rate").textContent = fmt[1].format(world.rateY) + "%";
+    $("w-rate-prev").textContent = fmt[1].format(world.ratePrev) + "%";
+    $("w-years").textContent = fmt[1].format(world.uneY / world.yearNet);
     $("w-une-year").textContent = people(world.uneY);
     $("w-net-year").textContent = people(world.yearNet);
+    const goalTick = renderGoal(world);
 
     const grid = $("grid");
     grid.innerHTML = "";
@@ -199,40 +183,27 @@
       el.className = "card" + (e.rest ? " rest" : "");
       const r1 = Math.round(e.rateY * 10), r0 = Math.round(e.ratePrev * 10);   // compare as displayed
       const rateCls = r1 > r0 ? "bad" : r1 < r0 ? "good" : "";
+      const lost = e.yearNet < 0;
       el.innerHTML = `
         <header>
           <span class="flag" aria-hidden="true">${e.flag}</span>
           <h3>${e.name}</h3>
           ${e.partOf ? `<span class="tag">part of ${e.partOf}</span>` : ""}
-          ${e.rest ? "" : sparkline(e)}
+          ${e.rest ? "" : sparkFor(e)}
         </header>
-        <div class="ytd jobs"><span class="num">0</span> <small class="num-label">net new jobs in ${YEAR}</small></div>
+        <div class="ytd jobs${lost ? " neg" : ""}"><span class="num">0</span> <small>net jobs ${lost ? "lost" : "added"} in ${YEAR}</small></div>
         <p class="unemp-line"><span class="une">0</span> <small>unemployed now</small></p>
-        <div class="bar" title="Unemployment rate ${fmt1.format(e.rateY)}%"><i class="u" style="width:${Math.min(e.rateY * 4, 100)}%"></i></div>
+        <div class="bar" title="Unemployment rate ${fmt[1].format(e.rateY)}%"><i class="u" style="width:${Math.min(e.rateY * 4, 100)}%"></i></div>
         <dl>
-          <div><dt>Unemployment rate ${YEAR}</dt><dd class="${rateCls}">${fmt1.format(e.rateY)}% <small>(${fmt1.format(e.ratePrev)}%)</small></dd></div>
+          <div><dt>Unemployment rate ${YEAR}</dt><dd class="${rateCls}">${fmt[1].format(e.rateY)}% <small>(${fmt[1].format(e.ratePrev)}%)</small></dd></div>
           <div><dt>Employed ${YEAR}</dt><dd>${people(e.empY)}</dd></div>
-          <div><dt>Net new jobs, all of ${YEAR}</dt><dd class="${e.yearNet >= 0 ? "good" : "bad"}">${signed(e.yearNet / 1e6, fmt2)} M</dd></div>
+          <div><dt>Net new jobs, all of ${YEAR}</dt><dd class="${e.yearNet >= 0 ? "good" : "bad"}">${signed(e.yearNet / 1e6, fmt[2])} M</dd></div>
           <div><dt>Unemployed vs ${YEAR - 1}</dt><dd class="${e.uneDelta > 0 ? "bad" : e.uneDelta < 0 ? "good" : ""}">${signed(e.uneDelta / 1e3)} k</dd></div>
           <div class="wide"><dt>Net jobs since you opened this page</dt><dd class="since">0</dd></div>
         </dl>
+        ${cardGoal(e)}
         ${e.rest ? "" : `<button type="button" class="more" aria-expanded="false">Yearly data <span aria-hidden="true">▾</span></button>${historyTable(e)}`}`;
-      const btn = el.querySelector(".more");
-      if (btn) {
-        const h = el.querySelector(".history");
-        const toggle = () => {
-          h.hidden = !h.hidden;
-          btn.setAttribute("aria-expanded", String(!h.hidden));
-          btn.firstChild.textContent = h.hidden ? "Yearly data " : "Hide yearly data ";
-          btn.classList.toggle("open", !h.hidden);
-        };
-        btn.addEventListener("click", toggle);
-        el.querySelector(".spark-wrap")?.addEventListener("click", toggle);
-      }
-      if (e.yearNet < 0) {
-        el.querySelector(".ytd").classList.add("neg");
-        el.querySelector(".num-label").textContent = `net jobs lost in ${YEAR}`;
-      }
+      C.wireHistory(el);
       grid.appendChild(el);
       return { e, el, num: el.querySelector(".num"), une: el.querySelector(".une"), since: el.querySelector(".since") };
     });
@@ -241,78 +212,55 @@
     const sortSel = $("sort");
     const keys = {
       jobs: (c) => c.e.yearNet,
+      keepup: (c) => c.e.keepUp ?? (c.e.yearUne <= 0 ? 1 : -1),   // shrinking workforce: rank by whether unemployment falls
       rate: (c) => c.e.rateY,
       unemployed: (c) => c.e.uneY,
       name: (c) => c.e.name
     };
-    function sortCards() {
-      const k = keys[sortSel.value];
-      cards.slice()
-        .sort((a, b) => (!!a.e.rest - !!b.e.rest) ||
-          (typeof k(a) === "string" ? k(a).localeCompare(k(b)) : k(b) - k(a)))
-        .forEach((c) => grid.appendChild(c.el));
-    }
+    const sortCards = () => C.sortInto(grid, cards, keys[sortSel.value]);
     sortSel.onchange = sortCards;
     sortCards();
 
-    // Clock loop
-    let lastJobs = "", lastUne = "";
-    (function tick() {
-      if (myLoop !== loopId) return;
-      const nowMs = Date.now(), t = tYears(nowMs);
-      const frac = t - YEAR;
-      const opened = tYears(T0);
-      const w = world.now(t);
-      const js = fmt0.format(Math.abs(w.jobs));
-      if (js !== lastJobs) { $("w-jobs").innerHTML = (w.jobs < 0 ? "-" : "") + digits(js); lastJobs = js; }
-      const us = fmt0.format(w.unemployed);
-      if (us !== lastUne) { $("w-une").innerHTML = digits(us); lastUne = us; }
-      $("w-jobs-sec").textContent = fmt2.format(w.jobsPerSec);
-      $("w-jobs-since").textContent = signed(w.jobs - world.now(opened).jobs);
-      $("w-une-since").textContent = signed(w.uneSince);
-      $("w-pct").textContent = fmt2.format(frac * 100);
+    // Clock
+    const opened = C.tYears(T0);
+    const openedJobs = new Map(cards.map((c) => [c, c.e.jobsAt(opened)]));
+    const worldOpened = world.jobsAt(opened);
+    C.startTicker((now) => {
+      const t = C.tYears(now), frac = C.yearFraction(now);
+      const jobs = world.jobsAt(t);
+      setText($("w-jobs"), (jobs < 0 ? "-" : "") + C.digits(fmt[0].format(Math.abs(jobs))), true);
+      setText($("w-une"), C.digits(fmt[0].format(world.unemployedAt(t))), true);
+      setText($("w-jobs-sec"), fmt[2].format(world.yearNet / C.SEC_PER_YEAR));
+      setText($("w-jobs-since"), signed(jobs - worldOpened));
+      setText($("w-une-since"), signed(world.unemployedAt(t) - world.u0));
+      setText($("w-pct"), fmt[2].format(frac * 100));
       $("w-bar").style.width = frac * 100 + "%";
       for (const c of cards) {
-        const n = c.e.now(t);
-        c.num.textContent = fmt0.format(Math.abs(n.jobs));
-        c.une.textContent = fmt0.format(n.unemployed);
-        c.since.textContent = signed(n.jobs - c.e.now(opened).jobs);
+        setText(c.num, fmt[0].format(Math.abs(c.e.jobsAt(t))));
+        setText(c.une, fmt[0].format(c.e.unemployedAt(t)));
+        setText(c.since, signed(c.e.jobsAt(t) - openedJobs.get(c)));
       }
-      requestAnimationFrame(tick);
-    })();
+      goalTick(t);
+    });
   }
 
   // ---- Boot ------------------------------------------------------------------
-  function setState(state, msg) {
-    document.body.dataset.state = state;
-    if (msg) $("error-msg").textContent = msg;
-  }
-
   async function show() {
     try {
       const { data, fetchedAt } = await loadData();
       render(data);
       $("fetched-at").textContent = fetchedAt.toLocaleString();
-      setState("ready");
+      C.setState("ready");
     } catch (err) {
       console.error(err);
-      setState("error", err.message || String(err));
+      C.stopTicker();
+      C.setState("error", err.message || String(err));
     }
   }
 
-  // Help pop-up
-  const help = $("help");
-  document.querySelectorAll("[data-open-help]").forEach((b) => b.addEventListener("click", () => {
-    if (help.showModal) help.showModal(); else help.setAttribute("open", "");
-    help.querySelector(".sheet").scrollTop = 0;
-    help.querySelector(".close").focus({ preventScroll: true });
-  }));
-  const closeHelp = () => (help.close ? help.close() : help.removeAttribute("open"));
-  document.querySelectorAll("[data-close-help]").forEach((b) => b.addEventListener("click", closeHelp));
-  help.addEventListener("click", (e) => { if (e.target === help) closeHelp(); });
-
-  document.querySelectorAll("[data-year]").forEach((el) => (el.textContent = YEAR));
-  document.querySelectorAll("[data-source]").forEach((el) => (el.textContent = CFG.source));
-  $("retry").addEventListener("click", () => { setState("loading"); show(); });
+  C.wireHelp();
+  C.fill("year", YEAR);
+  C.fill("source", CFG.source);
+  $("retry").addEventListener("click", () => { C.setState("loading"); show(); });
   show();
 })();

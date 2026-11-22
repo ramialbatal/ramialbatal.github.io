@@ -1,11 +1,18 @@
+/*
+ * Shared styles for the clocks on ramialbatal.github.io (Renewables Clock, Jobs Clock).
+ * Each clock loads this file first, then its own css/theme.css for colours and page-specific parts.
+ */
 :root {
   --bg: #0b0f0e;
   --panel: #141a18;
   --line: #24302c;
   --text: #e8efec;
   --muted: #8c9a95;
-  --accent: #5b9dff;
-  --accent-2: #a9c8ff;
+  --accent: #3ddc84;      /* each clock overrides these five in its own theme.css */
+  --accent-2: #b6f36a;
+  --tint: #10291c;
+  --glow: rgba(61,220,132,.35);
+  --on-accent: #06140c;
   --good: #4fd18b;
   --bad: #ff6b6b;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -13,7 +20,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-  background: radial-gradient(1200px 600px at 50% -200px, #111c33 0%, var(--bg) 60%) fixed, var(--bg);
+  background: radial-gradient(1200px 600px at 50% -200px, var(--tint) 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--text);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -32,7 +39,7 @@ a { color: var(--accent-2); }
 .big {
   font-family: var(--mono); font-weight: 700; color: var(--accent);
   font-size: clamp(1.9rem, 7.5vw, 5rem); line-height: 1.1; margin: 10px 0 0;
-  font-variant-numeric: tabular-nums; text-shadow: 0 0 28px rgba(91,157,255,.35);
+  font-variant-numeric: tabular-nums; text-shadow: 0 0 28px var(--glow);
   word-break: break-all;
 }
 .big .d { display: inline-block; min-width: .62em; }
@@ -93,7 +100,7 @@ body[data-state="ready"] .error-only { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
 button {
-  margin-top: 14px; background: var(--accent); color: #07101f; border: 0; border-radius: 8px;
+  margin-top: 14px; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px;
   padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer;
 }
 .ready-only { animation: fade .4s ease-out; }
@@ -143,7 +150,7 @@ button.more.open span { transform: rotate(180deg); }
   background: transparent; color: var(--muted); font-weight: 600;
   -webkit-tap-highlight-color: transparent; transition: background .2s, color .2s;
 }
-.gas-switch button[aria-pressed="true"] { background: var(--accent); color: #07101f; }
+.gas-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .gas-switch button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 
 .gas-note { max-width: 520px; margin: -10px auto 18px; font-size: .82rem; color: var(--muted); }
@@ -213,9 +220,6 @@ dialog#help[open] { animation: pop .22s ease-out; }
 .cmp-row b { font-family: var(--mono); font-weight: 600; font-size: .8rem; text-align: right; }
 .cmp-bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
 .cmp-bar i { display: block; height: 100%; min-width: 4px; border-radius: 5px; }
-.cmp-row.co2 i { background: #ff6b3d; }
-.cmp-row.ch4 i { background: #b388ff; }
-.cmp-bar i.fade { background: linear-gradient(90deg, #ff6b3d 70%, rgba(255,107,61,.15)) !important; }
 .cmp-note { font-size: .78rem; color: var(--muted) !important; margin: 10px 0 0 !important; }
 
 /* Bottom sheet on phones */
@@ -233,31 +237,34 @@ dialog#help[open] { animation: pop .22s ease-out; }
 .foot p { margin: 4px 0; }
 .foot strong { color: var(--text); }
 
-/* Mix bars in the help sheet */
-.mix-row { display: grid; grid-template-columns: 92px 1fr 64px; align-items: center; gap: 8px; margin: 6px 0; font-size: .85rem; }
-.mix-row span { color: var(--muted); }
-.mix-row b { font-family: var(--mono); font-weight: 600; text-align: right; }
-.mix-bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
-.mix-bar i { display: block; height: 100%; border-radius: 5px; }
-.related { margin-top: 10px; }
-@media (max-width: 420px) { .gas-switch button { padding: 8px 11px; font-size: .9rem; } }
 
-/* ---- Jobs clock: two counters side by side ---- */
-:root { --jobs: #5b9dff; --unemp: #ff8a5b; }
-.duo { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; margin: 24px 0 0; }
-.duo .hero { margin: 0; }
-.hero.unemp .big { color: var(--unemp); text-shadow: 0 0 28px rgba(255,138,91,.3); }
-.hero.unemp .progress i { background: linear-gradient(90deg, #ffc59b, var(--unemp)); }
-.big.mid { font-size: clamp(1.8rem, 5vw, 3.4rem); }
-.hero .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.versus { margin: 14px 0 40px; padding: 14px 18px; text-align: center; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
-.versus b { color: var(--text); font-family: var(--mono); }
-.ytd.neg { color: var(--bad); }
-.ytd.jobs { color: var(--accent-2); }
-.unemp-line { font-family: var(--mono); font-variant-numeric: tabular-nums; color: #ffc59b; font-size: 1.05rem; margin: 0 0 8px; }
-.unemp-line small { font-family: system-ui, sans-serif; color: var(--muted); font-size: .75rem; }
-.bar i.u { background: var(--unemp); }
-dd.bad { color: var(--bad); } dd.good { color: var(--good); }
-.history td.bad { color: var(--bad); } .history td.good { color: var(--good); }
-.spark polyline { stroke: var(--unemp); } .spark circle { fill: var(--unemp); }
-@media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+/* ---- Goal section: filling bars toward a target, with a verdict ---- */
+.goal { margin: 0 0 40px; padding: 22px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; }
+.goal h2 { margin: 0 0 6px; }
+.goal > p { margin: 0 0 18px; color: #c6d1cd; max-width: 780px; }
+.goal-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.goal-row { margin: 0 0 20px; }
+.goal-row:last-of-type { margin-bottom: 0; }
+.goal-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.goal-top b { font-size: 1.05rem; }
+.goal-num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; color: var(--accent-2); }
+.goal-unit { color: var(--muted); }
+.goal-side { margin-left: auto; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); font-size: .9rem; }
+.goal-bar { position: relative; height: 16px; background: var(--line); border-radius: 8px; }
+.goal-bar > i { display: block; height: 100%; max-width: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+.goal-bar > span { position: absolute; top: -5px; bottom: -5px; width: 3px; margin-left: -1.5px; background: var(--text); border-radius: 2px; box-shadow: 0 0 8px rgba(255,255,255,.5); }
+.goal-note { margin: 6px 0 0; font-size: .88rem; color: var(--muted); }
+.goal-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: .8rem; color: var(--muted); }
+.goal-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--accent); }
+.goal-legend .sw.mark { width: 4px; background: var(--text); }
+.goal .src { color: var(--muted); font-size: .8rem; margin: 18px 0 0; }
+.verdict { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.verdict.ok { color: var(--good); border-color: rgba(79,209,139,.5); background: rgba(79,209,139,.1); }
+.verdict.near { color: #ffd166; border-color: rgba(255,209,102,.5); background: rgba(255,209,102,.1); }
+.verdict.bad { color: var(--bad); border-color: rgba(255,107,107,.5); background: rgba(255,107,107,.1); }
+.card .verdict { font-size: .66rem; padding: 2px 8px; }
+.card-goal { margin-top: 12px; }
+.card-goal .goal-bar { height: 8px; }
+.card-goal .goal-bar > span { top: -3px; bottom: -3px; width: 2px; }
+.card-goal p { margin: 4px 0 0; font-size: .75rem; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.goal-row + .goal-note { margin-top: 14px; }

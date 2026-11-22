@@ -1,0 +1,23 @@
+/* Jobs Clock: colours and page-specific styles (loaded after ../shared/clock-base.css) */
+:root { --accent: #5b9dff; --accent-2: #a9c8ff; --tint: #111c33; --glow: rgba(91,157,255,.35); --on-accent: #07101f; }
+
+:root { --jobs: #5b9dff; --unemp: #ff8a5b; }
+.duo { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; margin: 24px 0 0; }
+.duo .hero { margin: 0; }
+.hero.unemp .big { color: var(--unemp); text-shadow: 0 0 28px rgba(255,138,91,.3); }
+.hero.unemp .progress i { background: linear-gradient(90deg, #ffc59b, var(--unemp)); }
+.big.mid { font-size: clamp(1.8rem, 5vw, 3.4rem); }
+.hero .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.versus { margin: 14px 0 40px; padding: 14px 18px; text-align: center; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.versus b { color: var(--text); font-family: var(--mono); }
+.ytd.neg { color: var(--bad); }
+.ytd.jobs { color: var(--accent-2); }
+.unemp-line { font-family: var(--mono); font-variant-numeric: tabular-nums; color: #ffc59b; font-size: 1.05rem; margin: 0 0 8px; }
+.unemp-line small { font-family: system-ui, sans-serif; color: var(--muted); font-size: .75rem; }
+.bar i.u { background: var(--unemp); }
+dd.bad { color: var(--bad); } dd.good { color: var(--good); }
+.history td.bad { color: var(--bad); } .history td.good { color: var(--good); }
+.spark polyline { stroke: var(--unemp); } .spark circle { fill: var(--unemp); }
+@media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+.goal .sdg { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+.goal .sdg h3 { margin: 0; font-size: 1rem; }
