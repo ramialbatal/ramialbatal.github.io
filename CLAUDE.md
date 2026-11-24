@@ -6,4 +6,6 @@
   `ramialbatal/clock-core` (developer notes in its `docs/` folder). Don't add clock code here.
 - Writing style: no em dashes or en dashes anywhere (text, comments, images). Professional but approachable.
 - Don't add an email address to any page.
+- Keep the `google-site-verification` meta tag in `index.html`: it verifies the Google Search Console property for the
+  whole site (homepage and all clocks). Keep `robots.txt` and `sitemap.xml`, and add any new clock's sitemap to `robots.txt`.
 - GitHub Pages serves `main`; work on a branch and merge with a pull request.
