@@ -15,16 +15,8 @@
 
 - [Personal website](https://ramialbatal.github.io/)
 - [LinkedIn](https://www.linkedin.com/in/ramialbatal)
-- [Google Scholar](https://scholar.google.com/citations?user=tuG6AlQAAAAJ): full list of publications
+- [Google Scholar](https://scholar.google.com/citations?user=tuG6AlQAAAAJ): publications
 - [GitHub](https://github.com/ramialbatal)
-
-## Selected publications
-
-- Overview of the NTCIR-12 Lifelog Task (NTCIR-12, 2016)
-- Advances in Lifelog Data Organisation and Retrieval at the NTCIR-14 Lifelog-3 Task (NTCIR-14, 2019)
-- SenseSeer: a mobile-cloud-based lifelogging framework (IEEE ISTAS, 2013)
-- Negative FaceBlurring: a privacy-by-design approach to visual lifelogging with Google Glass (2014)
-- Visual Phrases for automatic images annotation (CBMI, 2010)
 
 ## Personal projects
 
