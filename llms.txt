@@ -1,0 +1,40 @@
+# Rami Albatal
+
+> AI for things that matter. Rami Albatal is a data scientist, Head of AI at Beamery, and a researcher in
+> lifelogging and AI.
+
+## About
+
+- Leads the AI function at Beamery, a talent lifecycle platform used by large enterprises: AI strategy, research and
+  engineering, taking models from prototype to production. Focus areas: talent intelligence, skills, roles and careers.
+- Research background in computer vision, information retrieval and personal data. At Dublin City University he worked
+  on lifelogging systems and helped organise the NTCIR Lifelog evaluation tasks. Earlier, in Grenoble, he worked on
+  automatic image annotation and visual concept detection.
+
+## Profiles
+
+- [Personal website](https://ramialbatal.github.io/)
+- [LinkedIn](https://www.linkedin.com/in/ramialbatal)
+- [Google Scholar](https://scholar.google.com/citations?user=tuG6AlQAAAAJ): full list of publications
+- [GitHub](https://github.com/ramialbatal)
+
+## Selected publications
+
+- Overview of the NTCIR-12 Lifelog Task (NTCIR-12, 2016)
+- Advances in Lifelog Data Organisation and Retrieval at the NTCIR-14 Lifelog-3 Task (NTCIR-14, 2019)
+- SenseSeer: a mobile-cloud-based lifelogging framework (IEEE ISTAS, 2013)
+- Negative FaceBlurring: a privacy-by-design approach to visual lifelogging with Google Glass (2014)
+- Visual Phrases for automatic images annotation (CBMI, 2010)
+
+## Personal projects
+
+Live clocks that show the numbers behind the world's big challenges, second by second, against the goals set for them.
+Open source under the MIT licence.
+
+- [Emissions Clock](https://ramialbatal.github.io/emissions-clock/): CO2 and methane released by the world and major
+  emitters so far this year, with carbon budget and Paris pace checks. [Source](https://github.com/ramialbatal/emissions-clock)
+- [Renewables Clock](https://ramialbatal.github.io/renewables-clock/): electricity from solar, wind, hydro and other
+  renewables this year, against the goal of tripling capacity by 2030. [Source](https://github.com/ramialbatal/renewables-clock)
+- [Jobs Clock](https://ramialbatal.github.io/jobs-clock/): net new jobs this year next to the number of people looking
+  for work. [Source](https://github.com/ramialbatal/jobs-clock)
+- [clock-core](https://github.com/ramialbatal/clock-core): the shared toolkit behind the clocks.
