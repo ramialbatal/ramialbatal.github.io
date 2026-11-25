@@ -29,4 +29,6 @@ Open source under the MIT licence.
   renewables this year, against the goal of tripling capacity by 2030. [Source](https://github.com/ramialbatal/renewables-clock)
 - [Jobs Clock](https://ramialbatal.github.io/jobs-clock/): net new jobs this year next to the number of people looking
   for work. [Source](https://github.com/ramialbatal/jobs-clock)
+- [Peace Clock](https://ramialbatal.github.io/peace-clock/): world military spending this year next to the lives lost
+  to war and what the same money could pay for. [Source](https://github.com/ramialbatal/peace-clock)
 - [clock-core](https://github.com/ramialbatal/clock-core): the shared toolkit behind the clocks.

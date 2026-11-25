@@ -5,3 +5,4 @@ Sitemap: https://ramialbatal.github.io/sitemap.xml
 Sitemap: https://ramialbatal.github.io/emissions-clock/sitemap.xml
 Sitemap: https://ramialbatal.github.io/renewables-clock/sitemap.xml
 Sitemap: https://ramialbatal.github.io/jobs-clock/sitemap.xml
+Sitemap: https://ramialbatal.github.io/peace-clock/sitemap.xml
