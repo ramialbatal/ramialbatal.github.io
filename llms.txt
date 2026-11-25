@@ -31,4 +31,6 @@ Open source under the MIT licence.
   for work. [Source](https://github.com/ramialbatal/jobs-clock)
 - [Peace Clock](https://ramialbatal.github.io/peace-clock/): world military spending this year next to the lives lost
   to war and what the same money could pay for. [Source](https://github.com/ramialbatal/peace-clock)
+- [Warming Clock](https://ramialbatal.github.io/warming-clock/): how much hotter the world is than before industry,
+  against the Paris limits of 1.5°C and 2°C, with a countdown at today's pace. [Source](https://github.com/ramialbatal/warming-clock)
 - [clock-core](https://github.com/ramialbatal/clock-core): the shared toolkit behind the clocks.
