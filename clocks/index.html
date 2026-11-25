@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The world right now: five live clocks at a glance</title>
+<meta name="description" content="Five live clocks, one answer each: global warming, CO₂ emissions, renewable electricity, military spending and jobs, from the latest official data, in plain words.">
+<link rel="canonical" href="https://ramialbatal.github.io/clocks/">
+<link rel="alternate" hreflang="en" href="https://ramialbatal.github.io/clocks/">
+<link rel="alternate" hreflang="fr" href="https://ramialbatal.github.io/clocks/?lang=fr">
+<link rel="alternate" hreflang="es" href="https://ramialbatal.github.io/clocks/?lang=es">
+<link rel="alternate" hreflang="ar" href="https://ramialbatal.github.io/clocks/?lang=ar">
+<link rel="alternate" hreflang="x-default" href="https://ramialbatal.github.io/clocks/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rami Albatal">
+<meta property="og:title" content="The world right now: five live clocks at a glance">
+<meta property="og:description" content="Global warming, CO₂ emissions, renewables, military spending and jobs: one plain answer each, from the latest official data.">
+<meta property="og:url" content="https://ramialbatal.github.io/clocks/">
+<meta property="og:image" content="https://ramialbatal.github.io/images/clocks-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Five live clocks, each with a coloured answer and a live number">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The world right now: five live clocks at a glance">
+<meta name="twitter:description" content="Global warming, CO₂ emissions, renewables, military spending and jobs: one plain answer each, from the latest official data.">
+<meta name="twitter:image" content="https://ramialbatal.github.io/images/clocks-og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d12'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23f4f5fa' stroke-width='4'/%3E%3Cpath d='M32 20v13l8 5' stroke='%23ffb347' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "url": "https://ramialbatal.github.io/clocks/",
+  "name": "The world right now: five live clocks at a glance",
+  "author": { "@id": "https://ramialbatal.github.io/#person", "@type": "Person", "name": "Rami Albatal", "url": "https://ramialbatal.github.io/" },
+  "hasPart": [
+    { "@type": "WebApplication", "name": "Warming Clock", "url": "https://ramialbatal.github.io/warming-clock/" },
+    { "@type": "WebApplication", "name": "Emissions Clock", "url": "https://ramialbatal.github.io/emissions-clock/" },
+    { "@type": "WebApplication", "name": "Renewables Clock", "url": "https://ramialbatal.github.io/renewables-clock/" },
+    { "@type": "WebApplication", "name": "Peace Clock", "url": "https://ramialbatal.github.io/peace-clock/" },
+    { "@type": "WebApplication", "name": "Jobs Clock", "url": "https://ramialbatal.github.io/jobs-clock/" }
+  ]
+}
+</script>
+<!-- Language first, before anything is drawn: ?lang=, then the language chosen on any clock, then the device's -->
+<script>
+  (function () {
+    var ok = ["en", "fr", "es", "ar"], pick = null;
+    try { pick = new URLSearchParams(location.search).get("lang"); } catch (e) {}
+    if (ok.indexOf(pick) < 0) { try { pick = localStorage.getItem("clock-lang"); } catch (e) {} }
+    if (ok.indexOf(pick) < 0) pick = (navigator.language || "en").slice(0, 2).toLowerCase();
+    if (ok.indexOf(pick) < 0) pick = "en";
+    document.documentElement.lang = pick;
+    document.documentElement.dir = pick === "ar" ? "rtl" : "ltr";
+  })();
+</script>
+<style>
+  :root { --bg: #0b0d12; --card: #12161d; --text: #f4f5fa; --muted: #a3a9b8; --line: #252b36; --accent: #ffb347; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); color: var(--text); }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 22px 0 10px; text-align: center; position: relative; }
+  .tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .home { color: var(--muted); text-decoration: none; font-size: .9rem; }
+  .home:hover, .home:focus-visible { color: var(--text); }
+  .lang { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; font-size: .85rem; font-weight: 600; color: var(--text); background: var(--card); }
+  .lang select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+  .lang:focus-within, .home:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1 { margin: 0; font-size: clamp(1.7rem, 4.5vw, 2.6rem); letter-spacing: .01em; }
+  .sub { margin: 8px auto 0; max-width: 620px; color: var(--muted); }
+  .legend { margin: 12px 0 0; font-size: .9rem; color: var(--muted); }
+  .legend span { white-space: nowrap; margin: 0 6px; }
+  /* Three across on a laptop, with the last row centred; one per row on a phone */
+  main { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; padding-top: 18px; padding-bottom: 8px; }
+  /* Each clock is its own small widget (the clock's page with ?embed=1), 300 px tall */
+  iframe { display: block; flex: 0 1 372px; min-width: 0; height: 300px; border: 0; border-radius: 16px; background: var(--card); }
+  footer { padding: 18px 0 36px; text-align: center; color: var(--muted); font-size: .88rem; }
+  footer p { margin: 6px 0; }
+</style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="tools">
+      <a class="home" href="https://ramialbatal.github.io/" data-t="home">← Rami Albatal</a>
+      <label class="lang"><span aria-hidden="true">🌐</span> <span id="lang-code">EN</span>
+        <select id="lang-select" aria-label="Language">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+    </div>
+    <h1 data-t="title">The world right now</h1>
+    <p class="sub" data-t="sub">Five live clocks, each answering one big question in plain words, from the latest official data. Tap one to see more.</p>
+    <p class="legend" data-t="legend"><span>🟢 On track</span> <span>🟠 Mixed</span> <span>🔴 Off track</span></p>
+  </header>
+
+  <main class="wrap" id="clocks"></main>
+
+  <footer class="wrap">
+    <p data-t="foot1">Each clock fetches the latest official figures on every visit and shows its sources and method.</p>
+    <p data-t="foot2">Free to embed: open a clock and choose "Add to your site". Part of <a href="https://ramialbatal.github.io/">AI for things that matter</a>.</p>
+  </footer>
+
+<script>
+  (function () {
+    var B = "https://ramialbatal.github.io/";
+    var clocks = [
+      { slug: "warming-clock", name: { en: "Warming Clock", fr: "Horloge du réchauffement", es: "Reloj del calentamiento", ar: "ساعة الاحترار" } },
+      { slug: "emissions-clock", name: { en: "Emissions Clock", fr: "Horloge des émissions", es: "Reloj de emisiones", ar: "ساعة الانبعاثات" } },
+      { slug: "renewables-clock", name: { en: "Renewables Clock", fr: "Horloge des renouvelables", es: "Reloj de renovables", ar: "ساعة الطاقة المتجددة" } },
+      { slug: "peace-clock", name: { en: "Peace Clock", fr: "Horloge de la paix", es: "Reloj de la paz", ar: "ساعة السلام" } },
+      { slug: "jobs-clock", name: { en: "Jobs Clock", fr: "Horloge de l’emploi", es: "Reloj del empleo", ar: "ساعة الوظائف" } }
+    ];
+    var T = {
+      fr: {
+        doc: "Le monde en ce moment : cinq horloges en direct",
+        home: "← Rami Albatal",
+        title: "Le monde en ce moment",
+        sub: "Cinq horloges en direct, chacune répond à une grande question en mots simples, avec les dernières données officielles. Touchez-en une pour en savoir plus.",
+        legend: "<span>🟢 Sur la bonne voie</span> <span>🟠 Mitigé</span> <span>🔴 Dans le mauvais sens</span>",
+        foot1: "Chaque horloge récupère les derniers chiffres officiels à chaque visite et indique ses sources et sa méthode.",
+        foot2: "Libre d’intégration : ouvrez une horloge et choisissez « Ajouter à votre site ». Fait partie de <a href=\"https://ramialbatal.github.io/\">AI for things that matter</a>.",
+        lang: "Langue"
+      },
+      es: {
+        doc: "El mundo ahora mismo: cinco relojes en directo",
+        home: "← Rami Albatal",
+        title: "El mundo ahora mismo",
+        sub: "Cinco relojes en directo; cada uno responde a una gran pregunta con palabras sencillas, con los últimos datos oficiales. Toca uno para ver más.",
+        legend: "<span>🟢 Por buen camino</span> <span>🟠 A medias</span> <span>🔴 En la dirección equivocada</span>",
+        foot1: "Cada reloj obtiene las últimas cifras oficiales en cada visita y muestra sus fuentes y su método.",
+        foot2: "Puedes ponerlos en tu web: abre un reloj y elige «Añadir a tu sitio». Forma parte de <a href=\"https://ramialbatal.github.io/\">AI for things that matter</a>.",
+        lang: "Idioma"
+      },
+      ar: {
+        doc: "العالم الآن: خمس ساعات مباشرة",
+        home: "→ Rami Albatal",
+        title: "العالم الآن",
+        sub: "خمس ساعات مباشرة، تجيب كل منها عن سؤال كبير بكلمات بسيطة، استنادًا إلى أحدث البيانات الرسمية. اضغط على إحداها لمعرفة المزيد.",
+        legend: "<span>🟢 على المسار الصحيح</span> <span>🟠 بين بين</span> <span>🔴 في الاتجاه الخاطئ</span>",
+        foot1: "تجلب كل ساعة أحدث الأرقام الرسمية في كل زيارة، وتعرض مصادرها وطريقة حسابها.",
+        foot2: "يمكنك وضعها في موقعك مجانًا: افتح ساعة واختر «أضفها إلى موقعك». جزء من مشروع <a href=\"https://ramialbatal.github.io/\">AI for things that matter</a>.",
+        lang: "اللغة"
+      }
+    };
+    var lang = document.documentElement.lang, t = T[lang];
+    if (t) {
+      document.title = t.doc;
+      document.querySelectorAll("[data-t]").forEach(function (el) { var k = el.getAttribute("data-t"); if (t[k]) el.innerHTML = t[k]; });
+      document.getElementById("lang-select").setAttribute("aria-label", t.lang);
+    }
+    document.getElementById("lang-code").textContent = lang.toUpperCase();
+    var sel = document.getElementById("lang-select");
+    sel.value = lang;
+    sel.addEventListener("change", function () {
+      try { localStorage.setItem("clock-lang", sel.value); } catch (e) {}
+      var u = new URL(location.href);
+      if (sel.value === "en") u.searchParams.delete("lang"); else u.searchParams.set("lang", sel.value);
+      location.href = u.toString();
+    });
+    var box = document.getElementById("clocks");
+    clocks.forEach(function (c, i) {
+      var f = document.createElement("iframe");
+      f.src = B + c.slug + "/?embed=1" + (lang === "en" ? "" : "&lang=" + lang);
+      f.title = c.name[lang] || c.name.en;
+      // The first ones are on the first screen; the rest load as they come into view
+      f.loading = i < 2 ? "eager" : "lazy";
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>
