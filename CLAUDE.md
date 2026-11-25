@@ -1,8 +1,11 @@
 # Notes for AI assistants working in this repository
 
-- This repository is Rami Albatal's personal website only (`index.html`, `images/`, `llms.txt`).
+- This repository is Rami Albatal's personal website only (`index.html`, `images/`, `llms.txt`), plus `clocks/`: one
+  page that shows every clock's widget (`?embed=1` in an iframe). When a clock is added, add it there too (and its name
+  in all four languages).
 - The clocks are separate open projects, each in its own repository and served at the same addresses:
-  `ramialbatal/emissions-clock`, `ramialbatal/renewables-clock`, `ramialbatal/jobs-clock`, with shared code in
+  `ramialbatal/emissions-clock`, `ramialbatal/renewables-clock`, `ramialbatal/jobs-clock`, `ramialbatal/peace-clock`,
+  `ramialbatal/warming-clock`, with shared code in
   `ramialbatal/clock-core` (developer notes in its `docs/` folder). Don't add clock code here.
 - Writing style: no em dashes or en dashes anywhere (text, comments, images). Professional but approachable.
 - Don't add an email address to any page.

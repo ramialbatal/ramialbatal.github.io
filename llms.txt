@@ -22,6 +22,7 @@
 
 Live clocks that show the numbers behind the world's big challenges, second by second, against the goals set for them.
 Open source under the MIT licence.
+All five on one page, one answer each: [The world right now](https://ramialbatal.github.io/clocks/).
 
 - [Emissions Clock](https://ramialbatal.github.io/emissions-clock/): CO2 and methane released by the world and major
   emitters so far this year, with carbon budget and Paris pace checks. [Source](https://github.com/ramialbatal/emissions-clock)
