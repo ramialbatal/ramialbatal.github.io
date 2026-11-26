@@ -12,3 +12,5 @@
 - GitHub Pages serves `main`; work on a branch and merge with a pull request.
 - `index.html` carries a schema.org `ProfilePage` / `Person` block and share-card tags, and `llms.txt` is a plain
   summary for AI tools. Keep both in step with the page text when it changes (role, profiles, projects).
+- Site name: "AI for things that matter" (homepage `WebSite` structured data, and `og:site_name` on the homepage and
+  every clock). Google shows one name and one icon (`favicon.ico`, `favicon.svg`) for all of ramialbatal.github.io.
